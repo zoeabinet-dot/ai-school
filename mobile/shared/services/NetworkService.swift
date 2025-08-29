@@ -450,3 +450,172 @@ class MockAuthManager: AuthManagerProtocol {
         completion(true)
     }
 }
+
+// MARK: - NetworkService Extensions for iOS
+extension NetworkService {
+    static let shared = NetworkService(
+        session: .shared,
+        baseURL: URL(string: "https://api.addisababa-aischool.com")!,
+        authManager: MockAuthManager()
+    )
+    
+    // MARK: - Student Methods
+    func fetchStudents() async throws -> [Student] {
+        let endpoint = GetStudentsEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: StudentsResponse) in
+                        continuation.resume(returning: response.students)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+    
+    // MARK: - AI Lesson Methods
+    func fetchAILessons() async throws -> [AILesson] {
+        let endpoint = GetAILessonsEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: AILessonsResponse) in
+                        continuation.resume(returning: response.lessons)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+    
+    // MARK: - Analytics Methods
+    func fetchAnalytics() async throws -> AnalyticsData {
+        let endpoint = GetLearningAnalyticsEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: AnalyticsResponse) in
+                        continuation.resume(returning: response.analytics)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+    
+    // MARK: - Family Methods
+    func fetchFamilyData() async throws -> FamilyData {
+        let endpoint = GetFamiliesEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: FamilyDataResponse) in
+                        continuation.resume(returning: response.familyData)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+    
+    // MARK: - Staff Methods
+    func fetchStaffData() async throws -> StaffData {
+        let endpoint = GetStaffEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: StaffDataResponse) in
+                        continuation.resume(returning: response.staffData)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+    
+    // MARK: - Lessons Methods
+    func fetchLessons() async throws -> [Lesson] {
+        let endpoint = GetLessonsEndpoint()
+        return try await withCheckedThrowingContinuation { continuation in
+            request(endpoint)
+                .sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { (response: LessonsResponse) in
+                        continuation.resume(returning: response.lessons)
+                    }
+                )
+                .store(in: &cancellables)
+        }
+    }
+}
+
+// MARK: - Response Models
+struct StudentsResponse: Codable {
+    let students: [Student]
+}
+
+struct AILessonsResponse: Codable {
+    let lessons: [AILesson]
+}
+
+struct AnalyticsResponse: Codable {
+    let analytics: AnalyticsData
+}
+
+struct FamilyDataResponse: Codable {
+    let familyData: FamilyData
+}
+
+struct StaffDataResponse: Codable {
+    let staffData: StaffData
+}
+
+struct LessonsResponse: Codable {
+    let lessons: [Lesson]
+}
+
+// MARK: - Cancellables Storage
+private var cancellables = Set<AnyCancellable>()
