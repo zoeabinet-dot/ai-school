@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Alpha School AI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen gradient-bg flex items-center justify-center">
+    <div class="max-w-4xl mx-auto text-center text-white px-4">
+        <div class="mb-8">
+            <i class="fas fa-graduation-cap text-6xl mb-4"></i>
+            <h1 class="text-5xl font-bold mb-4">Alpha School AI</h1>
+            <p class="text-xl mb-8">Revolutionizing Education in Addis Ababa</p>
+            <p class="text-lg opacity-90 max-w-2xl mx-auto">
+                Experience the future of learning with our AI-driven education platform. 
+                Personalized lessons, real-time analytics, and intelligent monitoring for optimal learning outcomes.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <div class="card p-6 text-gray-800">
+                <i class="fas fa-robot text-4xl text-purple-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">AI-Powered Teaching</h3>
+                <p>Personalized lessons and real-time conversation with our intelligent AI teacher.</p>
+            </div>
+            <div class="card p-6 text-gray-800">
+                <i class="fas fa-chart-line text-4xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Advanced Analytics</h3>
+                <p>Comprehensive insights into student progress, engagement, and learning patterns.</p>
+            </div>
+            <div class="card p-6 text-gray-800">
+                <i class="fas fa-video text-4xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Smart Monitoring</h3>
+                <p>AI-powered webcam monitoring for attention tracking and behavioral analysis.</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <a href="{% url 'frontend:login' %}" class="btn-primary text-white px-8 py-4 rounded-lg text-lg font-semibold inline-block">
+                <i class="fas fa-sign-in-alt mr-2"></i>Get Started
+            </a>
+            <div class="text-sm opacity-75">
+                <p>New to Alpha School AI? Contact your administrator for account setup.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Choose Alpha School AI?</h2>
+            <p class="text-lg text-gray-600">Built for the modern educational landscape of Addis Ababa</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-brain text-purple-600 text-2xl"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Personalized Learning</h3>
+                <p class="text-gray-600 text-sm">AI adapts to each student's learning pace and style</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-users text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Family Engagement</h3>
+                <p class="text-gray-600 text-sm">Keep families connected with real-time progress updates</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Secure & Private</h3>
+                <p class="text-gray-600 text-sm">Enterprise-level security with privacy compliance</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-globe-africa text-orange-600 text-2xl"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Local Focus</h3>
+                <p class="text-gray-600 text-sm">Designed specifically for Ethiopian educational needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

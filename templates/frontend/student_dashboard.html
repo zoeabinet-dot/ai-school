@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Alpha School AI{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {{ user.get_full_name|default:user.username }}! 
+            <i class="fas fa-graduation-cap text-purple-600"></i>
+        </h1>
+        <p class="text-gray-600">Ready to continue your learning journey?</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Lessons Completed</p>
+                    <p class="text-2xl font-bold text-gray-900" id="completedLessons">-</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Current Score</p>
+                    <p class="text-2xl font-bold text-gray-900" id="currentScore">-</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="fas fa-star text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Study Time</p>
+                    <p class="text-2xl font-bold text-gray-900" id="studyTime">-</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="fas fa-clock text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">AI Interactions</p>
+                    <p class="text-2xl font-bold text-gray-900" id="aiInteractions">-</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    <i class="fas fa-robot text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Learning Progress -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Learning Progress</h2>
+                <i class="fas fa-chart-line text-gray-400"></i>
+            </div>
+            <div class="space-y-4" id="learningProgress">
+                <div class="flex justify-center items-center h-32 text-gray-500">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>Loading progress...
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Teacher Chat -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">AI Teacher</h2>
+                <i class="fas fa-robot text-purple-600"></i>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4 mb-4 h-64 overflow-y-auto" id="chatMessages">
+                <div class="text-center text-gray-500 mt-20">
+                    <i class="fas fa-comments text-4xl mb-2"></i>
+                    <p>Start a conversation with your AI teacher!</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <input type="text" id="chatInput" placeholder="Ask your AI teacher anything..." 
+                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <button onclick="sendMessage()" class="btn-primary text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Recent Lessons -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">Recent Lessons</h2>
+                <a href="#" class="text-purple-600 hover:text-purple-500 text-sm">View All</a>
+            </div>
+            <div class="space-y-3" id="recentLessons">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Assignments -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">Upcoming Assignments</h2>
+                <a href="#" class="text-purple-600 hover:text-purple-500 text-sm">View All</a>
+            </div>
+            <div class="space-y-3" id="upcomingAssignments">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">AI Recommendations</h2>
+                <i class="fas fa-lightbulb text-yellow-500"></i>
+            </div>
+            <div class="space-y-3" id="aiRecommendations">
+                <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Practice more math problems to improve your calculation speed.
+                    </p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                    <p class="text-sm text-green-800">
+                        <i class="fas fa-thumbs-up mr-2"></i>
+                        Great progress in reading comprehension! Keep it up.
+                    </p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                    <p class="text-sm text-yellow-800">
+                        <i class="fas fa-clock mr-2"></i>
+                        Take a 10-minute break - you've been studying for 2 hours!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentConversationId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    setupChatInput();
+});
+
+async function loadDashboardData() {
+    try {
+        // Load student dashboard data
+        const dashboardData = await apiRequest('/api/learning/student-dashboard/');
+        updateDashboardStats(dashboardData);
+        
+        // Load learning progress
+        const progressData = await apiRequest('/api/learning/progress/');
+        updateLearningProgress(progressData);
+        
+    } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+    }
+}
+
+function updateDashboardStats(data) {
+    // Update stats with real data or mock data
+    document.getElementById('completedLessons').textContent = data.progress_summary?.completed_lessons || '12';
+    document.getElementById('currentScore').textContent = '87%';
+    document.getElementById('studyTime').textContent = '24h';
+    document.getElementById('aiInteractions').textContent = '156';
+    
+    // Update recent lessons
+    const recentLessonsHtml = data.recent_lessons?.map(lesson => `
+        <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">${lesson.lesson?.title || 'Lesson'}</p>
+                <p class="text-xs text-gray-500">${lesson.status}</p>
+            </div>
+        </div>
+    `).join('') || '<p class="text-gray-500 text-sm">No recent lessons</p>';
+    
+    document.getElementById('recentLessons').innerHTML = recentLessonsHtml;
+    
+    // Update upcoming assignments
+    const assignmentsHtml = data.upcoming_assignments?.map(assignment => `
+        <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">${assignment.title}</p>
+                <p class="text-xs text-gray-500">Due: ${new Date(assignment.due_date).toLocaleDateString()}</p>
+            </div>
+        </div>
+    `).join('') || '<p class="text-gray-500 text-sm">No upcoming assignments</p>';
+    
+    document.getElementById('upcomingAssignments').innerHTML = assignmentsHtml;
+}
+
+function updateLearningProgress(progressData) {
+    const progressHtml = progressData?.map(path => `
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-gray-700">${path.learning_path?.name || 'Learning Path'}</span>
+                <span class="text-sm text-gray-500">${path.progress_percentage || 0}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-purple-600 h-2 rounded-full" style="width: ${path.progress_percentage || 0}%"></div>
+            </div>
+        </div>
+    `).join('') || `
+        <div class="text-center py-8">
+            <i class="fas fa-book text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">No learning paths assigned yet</p>
+        </div>
+    `;
+    
+    document.getElementById('learningProgress').innerHTML = progressHtml;
+}
+
+function setupChatInput() {
+    const chatInput = document.getElementById('chatInput');
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+}
+
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // Add user message to chat
+    addMessageToChat('user', message);
+    
+    try {
+        const response = await apiRequest('/api/ai-teacher/chat/', {
+            method: 'POST',
+            body: JSON.stringify({
+                message: message,
+                conversation_id: currentConversationId
+            })
+        });
+        
+        // Update conversation ID
+        currentConversationId = response.conversation_id;
+        
+        // Add AI response to chat
+        addMessageToChat('ai', response.ai_response.content);
+        
+    } catch (error) {
+        console.error('Failed to send message:', error);
+        addMessageToChat('ai', 'Sorry, I\'m having trouble right now. Please try again later.');
+    }
+}
+
+function addMessageToChat(sender, message) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Clear welcome message if this is the first message
+    if (chatMessages.querySelector('.text-center')) {
+        chatMessages.innerHTML = '';
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `mb-3 ${sender === 'user' ? 'text-right' : 'text-left'}`;
+    
+    const messageContent = `
+        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            sender === 'user' 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-gray-200 text-gray-800'
+        }">
+            <div class="flex items-start space-x-2">
+                ${sender === 'ai' ? '<i class="fas fa-robot mt-1"></i>' : ''}
+                <p class="text-sm">${message}</p>
+            </div>
+        </div>
+    `;
+    
+    messageDiv.innerHTML = messageContent;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+</script>
+{% endblock %}

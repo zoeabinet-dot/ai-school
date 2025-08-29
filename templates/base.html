@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}School Management System{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom styles -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-graduation-cap text-white text-2xl mr-3"></i>
+                        <h1 class="text-white text-xl font-bold">Alpha School AI</h1>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="{% url 'frontend:dashboard' %}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-home mr-2"></i>Dashboard
+                        </a>
+                        {% if user.role == 'student' %}
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-book mr-2"></i>Lessons
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-robot mr-2"></i>AI Teacher
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-chart-line mr-2"></i>Progress
+                        </a>
+                        {% elif user.role == 'staff' %}
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-users mr-2"></i>Students
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-tasks mr-2"></i>Assignments
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-analytics mr-2"></i>Analytics
+                        </a>
+                        {% elif user.role == 'admin' %}
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-cog mr-2"></i>Management
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-2"></i>Reports
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-white text-sm">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        {{ user.get_full_name|default:user.username }}
+                        <span class="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs ml-2">
+                            {{ user.get_role_display }}
+                        </span>
+                    </div>
+                    <button onclick="logout()" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}py-6{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 Alpha School AI Management System - Addis Ababa</p>
+                <p class="text-gray-400 text-sm mt-2">Empowering education through AI-driven learning</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored tokens
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                // Redirect to login
+                window.location.href = '/login/';
+            }
+        }
+
+        // API helper functions
+        function getAuthHeaders() {
+            const token = localStorage.getItem('access_token');
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        async function apiRequest(url, options = {}) {
+            const defaultOptions = {
+                headers: getAuthHeaders(),
+                ...options
+            };
+            
+            try {
+                const response = await fetch(url, defaultOptions);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
+        }
+
+        // Chart color schemes
+        const chartColors = {
+            primary: '#667eea',
+            secondary: '#764ba2',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#3b82f6'
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
