@@ -6,20 +6,39 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.addisababa.aischool.ui.viewmodels.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("admin") }
+    
+    // Handle login success
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is LoginUiState.Success -> {
+                onLoginSuccess()
+            }
+            is LoginUiState.Error -> {
+                // Error is displayed in the UI
+            }
+            else -> {}
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -60,7 +79,8 @@ fun LoginScreen(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             ),
-            singleLine = true
+            singleLine = true,
+            isError = uiState is LoginUiState.Error
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -75,14 +95,44 @@ fun LoginScreen(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
-            singleLine = true
+            singleLine = true,
+            isError = uiState is LoginUiState.Error
         )
         
-        if (errorMessage.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Role selector
+        ExposedDropdownMenuBox(
+            expanded = false,
+            onExpandedChange = { },
+        ) {
+            OutlinedTextField(
+                value = selectedRole.replaceFirstChar { it.uppercase() },
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Role") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) }
+            )
+            
+            ExposedDropdownMenu(
+                expanded = false,
+                onDismissRequest = { },
+            ) {
+                listOf("admin", "teacher", "student", "parent", "staff").forEach { role ->
+                    DropdownMenuItem(
+                        text = { Text(role.replaceFirstChar { it.uppercase() }) },
+                        onClick = { selectedRole = role }
+                    )
+                }
+            }
+        }
+        
+        if (uiState is LoginUiState.Error) {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = errorMessage,
+                text = uiState.message,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -92,27 +142,14 @@ fun LoginScreen(
         
         Button(
             onClick = {
-                isLoading = true
-                errorMessage = ""
-                
-                // Simulate login process
-                // TODO: Implement actual authentication
                 if (email.isNotEmpty() && password.isNotEmpty()) {
-                    // Simulate network delay
-                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                        kotlinx.coroutines.delay(1500)
-                        isLoading = false
-                        onLoginSuccess()
-                    }
-                } else {
-                    isLoading = false
-                    errorMessage = "Please enter both email and password"
+                    viewModel.login(email, password, selectedRole)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = uiState !is LoginUiState.Loading && email.isNotEmpty() && password.isNotEmpty()
         ) {
-            if (isLoading) {
+            if (uiState is LoginUiState.Loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     color = MaterialTheme.colorScheme.onPrimary
@@ -137,5 +174,21 @@ fun LoginScreen(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Connecting to Django Backend",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
+}
+
+// UI State for Login
+sealed class LoginUiState {
+    object Initial : LoginUiState()
+    object Loading : LoginUiState()
+    object Success : LoginUiState()
+    data class Error(val message: String) : LoginUiState()
 }
