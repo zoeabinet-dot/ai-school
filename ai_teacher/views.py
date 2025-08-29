@@ -27,7 +27,9 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from .models import (
     AILesson, AIConversation, ConversationMessage, 
-    AIRecommendation, AIBehavioralAnalysis
+    AIRecommendation, AIBehavioralAnalysis,
+    LanguagePreference, PredictiveAnalysis, ConversationContext,
+    AdvancedBehavioralMetrics, LearningOutcomePrediction
 )
 from .serializers import (
     AILessonSerializer, AIConversationSerializer, ConversationMessageSerializer,
@@ -945,3 +947,419 @@ class GenerateLessonView(APIView):
     
     def post(self, request):
         return Response({'message': 'Lesson generation - to be implemented'})
+
+
+# Phase 2: Advanced AI Features
+
+class MultiLanguageView(APIView):
+    """
+    Multi-language support for Amharic, Oromo, and other local languages
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get user's language preferences"""
+        try:
+            from .services import multi_language_service
+            
+            user = request.user
+            language_pref, created = LanguagePreference.objects.get_or_create(user=user)
+            
+            return Response({
+                'primary_language': language_pref.primary_language,
+                'secondary_languages': language_pref.secondary_languages,
+                'ai_response_language': language_pref.ai_response_language,
+                'auto_translate': language_pref.auto_translate,
+                'supported_languages': multi_language_service.SUPPORTED_LANGUAGES
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """Update language preferences"""
+        try:
+            user = request.user
+            language_pref, created = LanguagePreference.objects.get_or_create(user=user)
+            
+            language_pref.primary_language = request.data.get('primary_language', language_pref.primary_language)
+            language_pref.secondary_languages = request.data.get('secondary_languages', language_pref.secondary_languages)
+            language_pref.ai_response_language = request.data.get('ai_response_language', language_pref.ai_response_language)
+            language_pref.auto_translate = request.data.get('auto_translate', language_pref.auto_translate)
+            language_pref.save()
+            
+            return Response({'message': 'Language preferences updated successfully'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TranslateContentView(APIView):
+    """
+    Translate content to different languages
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .services import multi_language_service
+            
+            text = request.data.get('text')
+            target_language = request.data.get('target_language')
+            source_language = request.data.get('source_language')
+            
+            if not text or not target_language:
+                return Response({'error': 'Text and target_language are required'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            translated_text = multi_language_service.translate_text(
+                text, target_language, source_language
+            )
+            
+            return Response({
+                'original_text': text,
+                'translated_text': translated_text,
+                'source_language': source_language or multi_language_service.detect_language(text),
+                'target_language': target_language
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdvancedBehavioralAnalysisView(APIView):
+    """
+    Advanced computer vision behavioral analysis
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def post(self, request):
+        try:
+            from .services import computer_vision_service
+            import cv2
+            import numpy as np
+            import base64
+            
+            # Handle different input formats
+            if 'video_frame' in request.FILES:
+                # File upload
+                video_file = request.FILES['video_frame']
+                # Convert to numpy array for processing
+                file_bytes = video_file.read()
+                nparr = np.frombuffer(file_bytes, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            elif 'frame_data' in request.data:
+                # Base64 encoded frame
+                frame_data = request.data['frame_data']
+                if frame_data.startswith('data:image'):
+                    frame_data = frame_data.split(',')[1]
+                
+                img_bytes = base64.b64decode(frame_data)
+                nparr = np.frombuffer(img_bytes, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            else:
+                return Response({'error': 'No video frame provided'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            # Analyze behavior
+            analysis = computer_vision_service.analyze_student_behavior(frame)
+            
+            # Save analysis to database if student_id provided
+            student_id = request.data.get('student_id')
+            if student_id:
+                try:
+                    student = User.objects.get(id=student_id)
+                    # Note: This would require a LearningSession object
+                    # For now, we'll just return the analysis
+                    pass
+                except User.DoesNotExist:
+                    pass
+            
+            return Response({
+                'analysis': analysis,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PredictiveAnalyticsView(APIView):
+    """
+    AI-powered predictive analytics for learning outcomes
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .services import predictive_analytics_service
+            
+            student_id = request.data.get('student_id')
+            if not student_id:
+                return Response({'error': 'student_id is required'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get student data
+            try:
+                student = User.objects.get(id=student_id)
+            except User.DoesNotExist:
+                return Response({'error': 'Student not found'}, 
+                              status=status.HTTP_404_NOT_FOUND)
+            
+            # Prepare student data for prediction
+            student_data = {
+                'current_grade': request.data.get('current_grade', 85),
+                'attendance_rate': request.data.get('attendance_rate', 90),
+                'assignment_completion_rate': request.data.get('assignment_completion_rate', 88),
+                'average_score': request.data.get('average_score', 82),
+                'average_engagement_score': request.data.get('average_engagement_score', 75),
+                'attention_score': request.data.get('attention_score', 78),
+                'participation_rate': request.data.get('participation_rate', 80),
+                'study_time_daily': request.data.get('study_time_daily', 120),
+                'lesson_completion_rate': request.data.get('lesson_completion_rate', 85),
+                'help_seeking_frequency': request.data.get('help_seeking_frequency', 3),
+            }
+            
+            # Generate predictions
+            predictions = predictive_analytics_service.predict_learning_outcomes(student_data)
+            
+            # Save to database
+            analysis_type = request.data.get('analysis_type', 'academic_performance')
+            prediction_horizon = request.data.get('prediction_horizon', '1_month')
+            
+            predictive_analysis = PredictiveAnalysis.objects.create(
+                student=student,
+                analysis_type=analysis_type,
+                prediction_horizon=prediction_horizon,
+                input_features=student_data,
+                predictions=predictions,
+                confidence_scores=predictions.get('confidence_intervals', {}),
+                model_version='v1.0',
+                recommended_actions=predictions.get('recommended_interventions', [])
+            )
+            
+            return Response({
+                'predictions': predictions,
+                'analysis_id': predictive_analysis.id,
+                'student_id': student_id,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class NaturalLanguageUnderstandingView(APIView):
+    """
+    Enhanced Natural Language Understanding for better conversation context
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .services import nlu_service
+            
+            message = request.data.get('message')
+            conversation_id = request.data.get('conversation_id')
+            
+            if not message:
+                return Response({'error': 'message is required'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get conversation history if conversation_id provided
+            conversation_history = []
+            if conversation_id:
+                try:
+                    conversation = AIConversation.objects.get(conversation_id=conversation_id)
+                    messages = conversation.messages.order_by('sequence_number')
+                    conversation_history = [
+                        {
+                            'role': msg.message_type,
+                            'content': msg.content,
+                            'timestamp': msg.timestamp.isoformat()
+                        }
+                        for msg in messages
+                    ]
+                except AIConversation.DoesNotExist:
+                    pass
+            
+            # Analyze context
+            context_analysis = nlu_service.analyze_conversation_context(
+                conversation_history, message
+            )
+            
+            return Response({
+                'message': message,
+                'context_analysis': context_analysis,
+                'conversation_id': conversation_id,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Phase 3: Integration & Expansion
+
+class OfflineCapabilitiesView(APIView):
+    """
+    Offline capabilities using local AI models
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get offline capabilities status"""
+        try:
+            from .offline_services import offline_ai_service
+            
+            connectivity = offline_ai_service.check_connectivity()
+            statistics = offline_ai_service.get_offline_statistics()
+            
+            return Response({
+                'connectivity': connectivity,
+                'statistics': statistics,
+                'offline_mode_available': True
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """Generate offline AI response"""
+        try:
+            from .offline_services import offline_ai_service
+            
+            message = request.data.get('message')
+            student_id = request.data.get('student_id')
+            context = request.data.get('context', {})
+            
+            if not message:
+                return Response({'error': 'message is required'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            # Generate offline response
+            response_data = offline_ai_service.generate_offline_response(message, context)
+            
+            # Store interaction for later sync
+            if student_id and 'response' in response_data:
+                offline_ai_service.store_offline_interaction(
+                    student_id, message, response_data['response']
+                )
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class OfflineSyncView(APIView):
+    """
+    Synchronize offline data when connection is restored
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .offline_services import offline_sync_service
+            
+            sync_results = offline_sync_service.sync_offline_data()
+            
+            return Response({
+                'sync_results': sync_results,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CacheLessonOfflineView(APIView):
+    """
+    Cache lessons for offline access
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .offline_services import offline_ai_service
+            
+            lesson_id = request.data.get('lesson_id')
+            if not lesson_id:
+                return Response({'error': 'lesson_id is required'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                lesson = AILesson.objects.get(id=lesson_id)
+            except AILesson.DoesNotExist:
+                return Response({'error': 'Lesson not found'}, 
+                              status=status.HTTP_404_NOT_FOUND)
+            
+            # Prepare lesson data for caching
+            lesson_data = {
+                'id': lesson.id,
+                'title': lesson.title,
+                'description': lesson.description,
+                'content': lesson.content,
+                'subject': lesson.subject,
+                'grade_level': lesson.grade_level,
+                'language': request.data.get('language', 'en')
+            }
+            
+            # Cache lesson offline
+            success = offline_ai_service.cache_lesson_offline(lesson_data)
+            
+            if success:
+                return Response({'message': 'Lesson cached successfully for offline access'})
+            else:
+                return Response({'error': 'Failed to cache lesson'}, 
+                              status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdvancedReportingView(APIView):
+    """
+    Advanced reporting and custom dashboard builder
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get available report types and dashboard widgets"""
+        try:
+            from analytics.dashboard_builder import dashboard_builder, report_generator
+            
+            return Response({
+                'widget_types': dashboard_builder.WIDGET_TYPES,
+                'chart_themes': dashboard_builder.CHART_THEMES,
+                'report_types': report_generator.REPORT_TYPES
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """Create custom dashboard or generate report"""
+        try:
+            from analytics.dashboard_builder import dashboard_builder, report_generator
+            
+            action = request.data.get('action')  # 'create_dashboard' or 'generate_report'
+            
+            if action == 'create_dashboard':
+                dashboard_config = request.data.get('dashboard_config', {})
+                dashboard = dashboard_builder.create_dashboard(dashboard_config)
+                return Response(dashboard)
+            
+            elif action == 'generate_report':
+                report_type = request.data.get('report_type')
+                parameters = request.data.get('parameters', {})
+                
+                if not report_type:
+                    return Response({'error': 'report_type is required'}, 
+                                  status=status.HTTP_400_BAD_REQUEST)
+                
+                report = report_generator.generate_report(report_type, parameters)
+                return Response(report)
+            
+            else:
+                return Response({'error': 'Invalid action. Use "create_dashboard" or "generate_report"'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
