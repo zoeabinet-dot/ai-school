@@ -1,0 +1,246 @@
+version: '3.8'
+
+services:
+  # Django Application
+  web:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_school_network
+
+  # Development server (optional)
+  web-dev:
+    build:
+      context: .
+      target: development
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_school_network
+    profiles:
+      - dev
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=ai_school_db
+      - POSTGRES_USER=ai_school_user
+      - POSTGRES_PASSWORD=ai_school_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ai_school_network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai_school_network
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./staticfiles:/var/www/static
+      - ./media:/var/www/media
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+    networks:
+      - ai_school_network
+
+  # Celery worker for background tasks
+  celery:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    command: celery -A ai_school_management worker -l info
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_school_network
+
+  # Celery beat for scheduled tasks
+  celery-beat:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    command: celery -A ai_school_management beat -l info
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_school_network
+
+  # Flower for Celery monitoring
+  flower:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    command: celery -A ai_school_management flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - ai_school_network
+
+  # AI Model Service (optional)
+  ai-service:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://ai_school_user:ai_school_password@db:5432/ai_school_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - AI_SERVICE_MODE=True
+    volumes:
+      - ./ai_models:/app/ai_models
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_school_network
+    profiles:
+      - ai
+
+  # Monitoring and logging
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - ai_school_network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - ai_school_network
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  ai_school_network:
+    driver: bridge
