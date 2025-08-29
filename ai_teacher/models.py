@@ -58,7 +58,7 @@ class AILesson(models.Model):
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
-        related_name='created_lessons'
+        related_name='created_ai_lessons'
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
