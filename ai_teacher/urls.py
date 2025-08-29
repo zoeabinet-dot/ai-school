@@ -53,4 +53,27 @@ urlpatterns = [
     # Settings and Configuration
     path('settings/', views.AITeacherSettingsView.as_view(), name='ai_teacher_settings'),
     path('settings/update/', views.UpdateAISettingsView.as_view(), name='update_ai_settings'),
+    
+    # Phase 2: Advanced AI Features
+    # Multi-language Support
+    path('language/', views.MultiLanguageView.as_view(), name='multi_language'),
+    path('translate/', views.TranslateContentView.as_view(), name='translate_content'),
+    
+    # Advanced Computer Vision
+    path('advanced-behavior-analysis/', views.AdvancedBehavioralAnalysisView.as_view(), name='advanced_behavior_analysis'),
+    
+    # Predictive Analytics
+    path('predictive-analytics/', views.PredictiveAnalyticsView.as_view(), name='predictive_analytics'),
+    
+    # Natural Language Understanding
+    path('nlu-analysis/', views.NaturalLanguageUnderstandingView.as_view(), name='nlu_analysis'),
+    
+    # Phase 3: Integration & Expansion
+    # Offline Capabilities
+    path('offline/', views.OfflineCapabilitiesView.as_view(), name='offline_capabilities'),
+    path('offline/sync/', views.OfflineSyncView.as_view(), name='offline_sync'),
+    path('offline/cache-lesson/', views.CacheLessonOfflineView.as_view(), name='cache_lesson_offline'),
+    
+    # Advanced Reporting
+    path('reporting/', views.AdvancedReportingView.as_view(), name='advanced_reporting'),
 ]

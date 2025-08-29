@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+import json
 
 
 class AILesson(models.Model):
@@ -318,3 +319,286 @@ class AIBehavioralAnalysis(models.Model):
     
     def __str__(self):
         return f"Behavioral Analysis for {self.student.get_full_name()} at {self.analysis_timestamp}"
+
+
+class LanguagePreference(models.Model):
+    """
+    User language preferences for multi-language support
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='language_preference')
+    
+    # Primary language settings
+    primary_language = models.CharField(max_length=10, choices=[
+        ('en', 'English'),
+        ('am', 'Amharic (አማርኛ)'),
+        ('om', 'Oromo (Afaan Oromoo)'),
+        ('ti', 'Tigrinya (ትግርኛ)'),
+        ('so', 'Somali (Soomaali)'),
+        ('sw', 'Swahili (Kiswahili)'),
+        ('ar', 'Arabic (العربية)'),
+        ('fr', 'French (Français)'),
+    ], default='en')
+    
+    # Secondary languages
+    secondary_languages = models.JSONField(default=list, blank=True)
+    
+    # AI interaction preferences
+    ai_response_language = models.CharField(max_length=10, choices=[
+        ('en', 'English'),
+        ('am', 'Amharic (አማርኛ)'),
+        ('om', 'Oromo (Afaan Oromoo)'),
+        ('ti', 'Tigrinya (ትግርኛ)'),
+        ('so', 'Somali (Soomaali)'),
+        ('sw', 'Swahili (Kiswahili)'),
+        ('ar', 'Arabic (العربية)'),
+        ('fr', 'French (Français)'),
+    ], default='en')
+    
+    # Translation preferences
+    auto_translate = models.BooleanField(default=True)
+    show_original_text = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'language_preferences'
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.primary_language}"
+
+
+class PredictiveAnalysis(models.Model):
+    """
+    AI-powered predictive analytics for learning outcomes
+    """
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='predictive_analyses')
+    
+    # Analysis metadata
+    analysis_date = models.DateTimeField(auto_now_add=True)
+    analysis_type = models.CharField(max_length=50, choices=[
+        ('academic_performance', 'Academic Performance'),
+        ('engagement_prediction', 'Engagement Prediction'),
+        ('completion_probability', 'Completion Probability'),
+        ('learning_pathway', 'Learning Pathway Optimization'),
+        ('intervention_needed', 'Intervention Recommendation'),
+    ])
+    
+    # Prediction timeframe
+    prediction_horizon = models.CharField(max_length=20, choices=[
+        ('1_week', '1 Week'),
+        ('1_month', '1 Month'),
+        ('1_semester', '1 Semester'),
+        ('1_year', '1 Year'),
+    ])
+    
+    # Input features used for prediction
+    input_features = models.JSONField(default=dict)
+    
+    # Predictions
+    predictions = models.JSONField(default=dict)
+    confidence_scores = models.JSONField(default=dict)
+    
+    # Model information
+    model_version = models.CharField(max_length=50)
+    model_accuracy = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True, null=True
+    )
+    
+    # Recommendations
+    recommended_actions = models.JSONField(default=list)
+    intervention_priority = models.CharField(max_length=20, choices=[
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ], default='medium')
+    
+    # Validation
+    actual_outcomes = models.JSONField(default=dict, blank=True)
+    prediction_accuracy = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True, null=True
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'predictive_analyses'
+        ordering = ['-analysis_date']
+    
+    def __str__(self):
+        return f"Predictive Analysis: {self.analysis_type} for {self.student.get_full_name()}"
+
+
+class ConversationContext(models.Model):
+    """
+    Enhanced conversation context for better NLU
+    """
+    conversation = models.OneToOneField(AIConversation, on_delete=models.CASCADE, related_name='enhanced_context')
+    
+    # Context analysis
+    conversation_topics = models.JSONField(default=list)
+    sentiment_history = models.JSONField(default=list)
+    learning_indicators = models.JSONField(default=dict)
+    
+    # Student state tracking
+    current_understanding_level = models.CharField(max_length=20, choices=[
+        ('confused', 'Confused'),
+        ('struggling', 'Struggling'),
+        ('learning', 'Learning'),
+        ('understanding', 'Understanding'),
+        ('mastered', 'Mastered'),
+    ], default='learning')
+    
+    engagement_pattern = models.JSONField(default=dict)
+    response_preferences = models.JSONField(default=dict)
+    
+    # AI adaptation
+    ai_response_strategy = models.CharField(max_length=50, default='adaptive')
+    personalization_data = models.JSONField(default=dict)
+    
+    # Context continuity
+    topic_transitions = models.JSONField(default=list)
+    context_breaks = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'conversation_contexts'
+    
+    def __str__(self):
+        return f"Context for {self.conversation.conversation_id}"
+
+
+class AdvancedBehavioralMetrics(models.Model):
+    """
+    Advanced behavioral metrics from computer vision analysis
+    """
+    behavioral_analysis = models.OneToOneField(AIBehavioralAnalysis, on_delete=models.CASCADE, related_name='advanced_metrics')
+    
+    # Advanced attention metrics
+    gaze_tracking = models.JSONField(default=dict)
+    attention_heatmap = models.JSONField(default=dict)
+    distraction_events = models.JSONField(default=list)
+    
+    # Micro-expressions
+    facial_expressions = models.JSONField(default=dict)
+    emotion_transitions = models.JSONField(default=list)
+    micro_expression_count = models.IntegerField(default=0)
+    
+    # Posture and movement
+    posture_changes = models.JSONField(default=list)
+    movement_patterns = models.JSONField(default=dict)
+    restlessness_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        default=0
+    )
+    
+    # Learning indicators
+    note_taking_detected = models.BooleanField(default=False)
+    hand_raising_detected = models.BooleanField(default=False)
+    device_usage_patterns = models.JSONField(default=dict)
+    
+    # Environmental factors
+    lighting_quality = models.CharField(max_length=20, choices=[
+        ('poor', 'Poor'),
+        ('fair', 'Fair'),
+        ('good', 'Good'),
+        ('excellent', 'Excellent'),
+    ], blank=True, null=True)
+    
+    background_distractions = models.JSONField(default=list)
+    audio_quality_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True, null=True
+    )
+    
+    # Predictive indicators
+    fatigue_indicators = models.JSONField(default=list)
+    stress_indicators = models.JSONField(default=list)
+    engagement_predictors = models.JSONField(default=dict)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'advanced_behavioral_metrics'
+    
+    def __str__(self):
+        return f"Advanced Metrics for {self.behavioral_analysis.student.get_full_name()}"
+
+
+class LearningOutcomePrediction(models.Model):
+    """
+    Specific learning outcome predictions
+    """
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='outcome_predictions')
+    lesson = models.ForeignKey(AILesson, on_delete=models.CASCADE, related_name='outcome_predictions')
+    
+    # Prediction details
+    predicted_completion_time = models.IntegerField(help_text="Predicted completion time in minutes")
+    predicted_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    predicted_difficulty_level = models.CharField(max_length=20, choices=[
+        ('too_easy', 'Too Easy'),
+        ('appropriate', 'Appropriate'),
+        ('challenging', 'Challenging'),
+        ('too_difficult', 'Too Difficult'),
+    ])
+    
+    # Confidence and reliability
+    prediction_confidence = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    
+    # Factors influencing prediction
+    key_factors = models.JSONField(default=list)
+    risk_factors = models.JSONField(default=list)
+    success_indicators = models.JSONField(default=list)
+    
+    # Recommendations
+    pre_lesson_recommendations = models.JSONField(default=list)
+    during_lesson_adaptations = models.JSONField(default=list)
+    post_lesson_follow_up = models.JSONField(default=list)
+    
+    # Actual outcomes (for validation)
+    actual_completion_time = models.IntegerField(blank=True, null=True)
+    actual_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True, null=True
+    )
+    
+    prediction_accuracy = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True, null=True
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'learning_outcome_predictions'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Outcome Prediction: {self.lesson.title} for {self.student.get_full_name()}"
