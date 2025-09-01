@@ -1,12 +1,26 @@
 # Machine learning and heavy packages (install only where ML features are needed)
 openai==1.12.0
-whisper==1.1.10
-vosk==0.3.45
+openai-whisper==20231117
 gtts==2.4.0
+
+# Computer Vision
 opencv-python==4.9.0.80
-numpy==1.26.3
 pillow==10.2.0
+
+# Deep Learning & ML
 tensorflow==2.15.0
-scikit-learn==1.3.2
-transformers==4.36.2
 torch==2.1.2
+torchaudio==2.1.2
+transformers==4.36.2
+scikit-learn==1.3.2
+
+# Data Processing
+numpy==1.26.3
+pandas==2.1.4
+
+# Audio Processing
+ffmpeg-python==0.2.0
+soundfile==0.12.1
+
+# Optional: Offline Speech Recognition (comment out if not needed)
+# vosk==0.3.45

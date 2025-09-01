@@ -38,6 +38,22 @@ class Staff(models.Model):
         ON_LEAVE = 'on_leave', 'On Leave'
         TERMINATED = 'terminated', 'Terminated'
         PROBATION = 'probation', 'Probation'
+        
+    class GradeLevels(models.TextChoices):
+        PRE_K = 'pre_k', 'Pre-K'
+        KINDERGARTEN = 'k', 'Kindergarten'
+        FIRST = '1', 'First Grade'
+        SECOND = '2', 'Second Grade'
+        THIRD = '3', 'Third Grade'
+        FOURTH = '4', 'Fourth Grade'
+        FIFTH = '5', 'Fifth Grade'
+        SIXTH = '6', 'Sixth Grade'
+        SEVENTH = '7', 'Seventh Grade'
+        EIGHTH = '8', 'Eighth Grade'
+        NINTH = '9', 'Ninth Grade'
+        TENTH = '10', 'Tenth Grade'
+        ELEVENTH = '11', 'Eleventh Grade'
+        TWELFTH = '12', 'Twelfth Grade'
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='staff_profile')
     employee_id = models.CharField(max_length=20, unique=True, help_text="Unique employee ID")
@@ -47,6 +63,9 @@ class Staff(models.Model):
     status = models.CharField(max_length=20, choices=StaffStatus.choices, default=StaffStatus.ACTIVE)
     qualifications = models.JSONField(default=list, help_text="List of qualifications and certifications")
     specializations = models.JSONField(default=list, help_text="Areas of specialization")
+    assigned_grades = models.JSONField(default=list, help_text="Grade levels assigned to this staff member")
+    assigned_subjects = models.JSONField(default=list, help_text="Subjects assigned to this staff member")
+    teaching_experience = models.PositiveIntegerField(default=0, help_text="Years of teaching experience")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -69,9 +88,6 @@ class StaffProfile(models.Model):
     Extended staff profile information
     """
     staff = models.OneToOneField(Staff, on_delete=models.CASCADE, related_name='profile')
-    assigned_grades = models.JSONField(default=list, help_text="Grade levels assigned to this staff member")
-    assigned_subjects = models.JSONField(default=list, help_text="Subjects assigned to this staff member")
-    teaching_experience = models.PositiveIntegerField(default=0, help_text="Years of teaching experience")
     certifications = models.JSONField(default=list, help_text="Professional certifications")
     preferences = models.JSONField(default=dict, help_text="Staff preferences and settings")
     created_at = models.DateTimeField(auto_now_add=True)

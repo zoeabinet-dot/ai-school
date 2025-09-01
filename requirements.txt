@@ -45,3 +45,8 @@ python-decouple==3.8
 
 # Monitoring and Logging
 sentry-sdk==1.39.1
+
+# Celery and Task Queue
+celery==5.3.6
+redis==5.0.1
+flower==2.0.1
