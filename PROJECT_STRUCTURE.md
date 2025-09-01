@@ -260,7 +260,7 @@ dj-database-url==2.1.0
 
 # Authentication & Security
 djangorestframework-simplejwt==5.3.0
-cryptography==41.0.8
+cryptography>=3.4.8,<44.0
 
 # AI and Machine Learning
 openai==1.12.0

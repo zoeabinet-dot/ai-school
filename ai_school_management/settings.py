@@ -14,6 +14,10 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+# Environment helpers
+from decouple import config, Csv
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,12 +26,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#j44d^5w)+s=i!0ah&*ct$@x!k)iis3v$ln#hi3#s89tx0jkx2'
+# Load from environment with a safe default for development only
+SECRET_KEY = config('SECRET_KEY', default='insecure-development-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Default to False for safer production posture; set DEBUG=True in development via env
+DEBUG = config('DEBUG', default='False', cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+# Hosts allowed to serve the application. Provide a comma-separated list in PROD.
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=Csv())
 
 
 # Application definition
@@ -59,6 +66,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise should come directly after SecurityMiddleware to serve static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -90,35 +99,11 @@ WSGI_APPLICATION = 'ai_school_management.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
+# Prefer a single DATABASE_URL env var (12-factor). If not provided, default to local SQLite.
+DATABASE_URL = os.environ.get('DATABASE_URL') or config('DATABASE_URL', default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'))
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ai_school_db',
-        'USER': 'ai_school_user',
-        'PASSWORD': 'ai_school_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 }
-
-# Fallback to SQLite for development
-if os.environ.get('USE_SQLITE', 'false').lower() == 'true':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    # Use SQLite by default for development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
 
 
 # Password validation
@@ -204,14 +189,10 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
+# Allow origins can be provided via env var (comma separated) for flexibility in different environments
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000', cast=Csv())
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
 
 # AI Service Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
@@ -220,6 +201,9 @@ ELEVENLABS_API_KEY = os.environ.get('ELEVENLABS_API_KEY', '')
 # File Upload Settings
 MAX_UPLOAD_SIZE = 52428800  # 50MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800
+
+# Static files storage - WhiteNoise for efficient static serving in production
+STATICFILES_STORAGE = config('STATICFILES_STORAGE', default='whitenoise.storage.CompressedManifestStaticFilesStorage')
 
 # Logging Configuration
 LOGGING = {
@@ -254,4 +238,22 @@ LOGGING = {
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 
 # Frontend URL (for email verification)
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', config('FRONTEND_URL', default='http://localhost:3000'))
+
+# Security-related defaults for production mode
+# SECURE_SSL_REDIRECT: default to True when DEBUG is False, but allow overriding via env
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=('True' if not DEBUG else 'False'), cast=bool)
+
+# HSTS settings (only meaningful when SECURE_SSL_REDIRECT is True)
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=(31536000 if SECURE_SSL_REDIRECT else 0), cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+# Default SECURE_HSTS_PRELOAD to True when SSL redirect is enabled so deployments
+# that enable HTTPS get the stronger preload behavior by default. Operators can
+# still override via env if needed.
+SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=(True if SECURE_SSL_REDIRECT else False), cast=bool)
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True

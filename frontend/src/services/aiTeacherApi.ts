@@ -1,4 +1,12 @@
 import { apiService } from './api';
+
+function normalizeResponse(res: any) {
+  if (res && typeof res === 'object') {
+    if (res.data && Object.prototype.hasOwnProperty.call(res.data, 'results')) return res;
+    if (res.data) return res.data;
+  }
+  return res;
+}
 import { 
   AILesson, 
   AIConversation, 
@@ -16,115 +24,140 @@ export class AITeacherApiService {
     grade_level?: number;
     difficulty_level?: string;
   }): Promise<PaginatedResponse<AILesson>> {
-    return apiService.get('/ai-teacher/lessons/', { params });
+  const res = await apiService.get('/ai-teacher/lessons/', { params });
+  return normalizeResponse(res);
   }
 
   static async getAILesson(id: number): Promise<AILesson> {
-    return apiService.get(`/ai-teacher/lessons/${id}/`);
+  const res = await apiService.get(`/ai-teacher/lessons/${id}/`);
+  return normalizeResponse(res);
   }
 
   static async createAILesson(data: Partial<AILesson>): Promise<AILesson> {
-    return apiService.post('/ai-teacher/lessons/', data);
+  const res = await apiService.post('/ai-teacher/lessons/', data);
+  return normalizeResponse(res);
   }
 
   static async updateAILesson(id: number, data: Partial<AILesson>): Promise<AILesson> {
-    return apiService.put(`/ai-teacher/lessons/${id}/`, data);
+  const res = await apiService.put(`/ai-teacher/lessons/${id}/`, data);
+  return normalizeResponse(res);
   }
 
   static async deleteAILesson(id: number): Promise<void> {
-    return apiService.delete(`/ai-teacher/lessons/${id}/`);
+  const res = await apiService.delete(`/ai-teacher/lessons/${id}/`);
+  return normalizeResponse(res);
   }
 
   // Generate AI Lesson
   static async generateAILesson(prompt: string): Promise<AILesson> {
-    return apiService.post('/ai-teacher/generate-lesson/', { prompt });
+  const res = await apiService.post('/ai-teacher/generate-lesson/', { prompt });
+  return normalizeResponse(res);
   }
 
   // AI Conversations
   static async getConversations(studentId?: number): Promise<AIConversation[]> {
     const params = studentId ? { student_id: studentId } : {};
-    return apiService.get('/ai-teacher/conversations/', { params });
+  const res = await apiService.get('/ai-teacher/conversations/', { params });
+  return normalizeResponse(res);
   }
 
   static async getConversation(id: number): Promise<AIConversation> {
-    return apiService.get(`/ai-teacher/conversations/${id}/`);
+  const res = await apiService.get(`/ai-teacher/conversations/${id}/`);
+  return normalizeResponse(res);
   }
 
-  static async createConversation(data: Partial<AIConversation>): Promise<AIConversation> {
-    return apiService.post('/ai-teacher/conversations/', data);
+  static async createConversation(data: any): Promise<AIConversation> {
+  const res = await apiService.post('/ai-teacher/conversations/', data);
+  return normalizeResponse(res);
   }
 
   static async updateConversation(id: number, data: Partial<AIConversation>): Promise<AIConversation> {
-    return apiService.put(`/ai-teacher/conversations/${id}/`, data);
+  const res = await apiService.put(`/ai-teacher/conversations/${id}/`, data);
+  return normalizeResponse(res);
   }
 
   static async deleteConversation(id: number): Promise<void> {
-    return apiService.delete(`/ai-teacher/conversations/${id}/`);
+  const res = await apiService.delete(`/ai-teacher/conversations/${id}/`);
+  return normalizeResponse(res);
   }
 
   // Conversation Messages
   static async getConversationMessages(conversationId: number): Promise<ConversationMessage[]> {
-    return apiService.get(`/ai-teacher/conversations/${conversationId}/messages/`);
+  const res = await apiService.get(`/ai-teacher/conversations/${conversationId}/messages/`);
+  return normalizeResponse(res);
   }
 
   static async sendMessage(conversationId: number, data: Partial<ConversationMessage>): Promise<ConversationMessage> {
-    return apiService.post(`/ai-teacher/conversations/${conversationId}/messages/`, data);
+  const res = await apiService.post(`/ai-teacher/conversations/${conversationId}/messages/`, data);
+  return normalizeResponse(res);
   }
 
   // Speech Processing
   static async speechToText(audioFile: File): Promise<{ text: string }> {
     const formData = new FormData();
     formData.append('audio', audioFile);
-    return apiService.post('/ai-teacher/speech-to-text/', formData);
+  const res = await apiService.post('/ai-teacher/speech-to-text/', formData);
+  return normalizeResponse(res);
   }
 
   static async textToSpeech(text: string, voice?: string): Promise<{ audio_url: string }> {
-    return apiService.post('/ai-teacher/text-to-speech/', { text, voice });
+  const res = await apiService.post('/ai-teacher/text-to-speech/', { text, voice });
+  return normalizeResponse(res);
   }
 
   // AI Recommendations
   static async getRecommendations(studentId: number): Promise<any[]> {
-    return apiService.get(`/ai-teacher/recommendations/${studentId}/`);
+  const res = await apiService.get(`/ai-teacher/recommendations/${studentId}/`);
+  return normalizeResponse(res);
   }
 
   static async generateRecommendations(studentId: number): Promise<any[]> {
-    return apiService.post(`/ai-teacher/recommendations/${studentId}/generate/`);
+  const res = await apiService.post(`/ai-teacher/recommendations/${studentId}/generate/`);
+  return normalizeResponse(res);
   }
 
   // Behavioral Analysis
   static async analyzeBehavior(studentId: number, data: any): Promise<any> {
-    return apiService.post(`/ai-teacher/behavior-analysis/${studentId}/`, data);
+  const res = await apiService.post(`/ai-teacher/behavior-analysis/${studentId}/`, data);
+  return normalizeResponse(res);
   }
 
   static async getBehaviorReport(studentId: number, dateRange?: string): Promise<any> {
     const params = dateRange ? { date_range: dateRange } : {};
-    return apiService.get(`/ai-teacher/behavior-analysis/${studentId}/report/`, { params });
+  const res = await apiService.get(`/ai-teacher/behavior-analysis/${studentId}/report/`, { params });
+  return normalizeResponse(res);
   }
 
   // AI Model Management
   static async getAIModels(): Promise<any[]> {
-    return apiService.get('/ai-teacher/models/');
+  const res = await apiService.get('/ai-teacher/models/');
+  return normalizeResponse(res);
   }
 
   static async getAIModel(id: string): Promise<any> {
-    return apiService.get(`/ai-teacher/models/${id}/`);
+  const res = await apiService.get(`/ai-teacher/models/${id}/`);
+  return normalizeResponse(res);
   }
 
   static async trainAIModel(modelId: string, data: any): Promise<any> {
-    return apiService.post(`/ai-teacher/models/${modelId}/train/`, data);
+  const res = await apiService.post(`/ai-teacher/models/${modelId}/train/`, data);
+  return normalizeResponse(res);
   }
 
   static async deployAIModel(modelId: string): Promise<any> {
-    return apiService.post(`/ai-teacher/models/${modelId}/deploy/`);
+  const res = await apiService.post(`/ai-teacher/models/${modelId}/deploy/`);
+  return normalizeResponse(res);
   }
 
   // AI Insights
   static async getAIInsights(studentId: number): Promise<any> {
-    return apiService.get(`/ai-teacher/insights/${studentId}/`);
+  const res = await apiService.get(`/ai-teacher/insights/${studentId}/`);
+  return normalizeResponse(res);
   }
 
   static async generateAIInsights(studentId: number): Promise<any> {
-    return apiService.post(`/ai-teacher/insights/${studentId}/generate/`);
+  const res = await apiService.post(`/ai-teacher/insights/${studentId}/generate/`);
+  return normalizeResponse(res);
   }
 }
 

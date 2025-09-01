@@ -526,6 +526,24 @@ export interface FamilyStudent {
   created_at: string;
 }
 
+export interface FamilyCommunication {
+  id: number;
+  family: number;
+  type: string;
+  message: string;
+  sent_at: string;
+  metadata?: Record<string, any>;
+}
+
+export interface FamilyNotification {
+  id: number;
+  family: number;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
 // Staff Types
 export interface Staff {
   id: number;
@@ -567,6 +585,22 @@ export enum AssignmentStatus {
   INACTIVE = 'inactive',
   PENDING = 'pending',
   COMPLETED = 'completed'
+}
+
+export interface StaffSchedule {
+  id: number;
+  staff: number;
+  day: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface StaffPerformance {
+  id: number;
+  staff: number;
+  period: string;
+  rating: number;
+  notes?: string;
 }
 
 // Lesson Types

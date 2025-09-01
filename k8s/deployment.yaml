@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-school-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-school-web
+  template:
+    metadata:
+      labels:
+        app: ai-school-web
+    spec:
+      containers:
+        - name: web
+          image: REPLACE_WITH_IMAGE
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: "REPLACE_WITH_DATABASE_URL"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-school-secrets
+                  key: SECRET_KEY
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-school-web
+spec:
+  selector:
+    app: ai-school-web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

@@ -1,0 +1,119 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Optional: use build cache between runs (requires a registry or cache action)
+      - name: Restore Docker cache (optional)
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Log in to registry
+        uses: docker/login-action@v2
+        with:
+          # Provide DOCKER_REGISTRY (optional, defaults to docker.io), DOCKER_USERNAME and DOCKER_PASSWORD
+          registry: ${{ secrets.DOCKER_REGISTRY || 'docker.io' }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          # Build multi-arch images by default; adjust platforms if you have specific needs
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY_NAMESPACE || 'docker.io' }}/${{ secrets.DOCKER_REPOSITORY || github.repository }}:latest
+            ${{ secrets.DOCKER_REGISTRY_NAMESPACE || 'docker.io' }}/${{ secrets.DOCKER_REPOSITORY || github.repository }}:${{ github.sha }}
+          build-args: |
+            PYTHON_ENV=production
+
+      - name: Save Docker cache (optional)
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+
+      - name: Set DOCKER_IMAGE env
+        run: |
+          IMAGE=${{ secrets.DOCKER_REGISTRY_NAMESPACE || 'docker.io' }}/${{ secrets.DOCKER_REPOSITORY || github.repository }}:latest
+          echo "DOCKER_IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Create GitHub Release (placeholder)
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: Release ${{ github.sha }}
+          body: |
+            Docker images built by workflow:
+            - ${{ env.DOCKER_IMAGE }}
+
+      - name: Deploy to Kubernetes (placeholder)
+        if: ${{ secrets.KUBE_CONFIG != '' }}
+        env:
+          DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || '' }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY || '' }}
+        run: |
+          echo "KUBE_CONFIG secret detected, attempting placeholder kubectl deploy"
+          echo "Writing kubeconfig to file"
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl version --client
+          chmod +x scripts/render_k8s.sh
+          ./scripts/render_k8s.sh
+          kubectl rollout status deployment/ai-school-web --timeout=120s || true
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: steps.build-and-push.outputs.pushed == 'true' || true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH (placeholder)
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          # Provide SSH_PRIVATE_KEY and SSH_KNOWN_HOSTS as repository secrets.
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          script: |
+            echo "Placeholder deploy: pull new image and restart service"
+            # Example: on a server with docker-compose.yml
+            # docker pull ${DOCKER_IMAGE}
+            # docker-compose -f /path/to/docker-compose.yml up -d --no-deps --build web
+            echo "Replace with your real deploy commands."
+
+      - name: Post-deploy notice
+        run: echo "Deployment step completed (placeholder). Configure the SSH secrets and commands to perform a real deploy."

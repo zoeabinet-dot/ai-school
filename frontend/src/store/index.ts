@@ -190,13 +190,14 @@ export const useStudentsStore = create<StudentsStore>()(
         set({ loading: { ...get().loading, isLoading: true, error: null } });
         try {
           const response = await apiService.get('/students/', { params });
+          const data: any = response;
           set({
-            students: response.results,
+            students: data.results,
             pagination: {
               page: params.page || 1,
               pageSize: params.page_size || 10,
-              total: response.count,
-              totalPages: Math.ceil(response.count / (params.page_size || 10)),
+              total: data.count,
+              totalPages: Math.ceil(data.count / (params.page_size || 10)),
             },
             loading: { ...get().loading, isLoading: false },
           });
@@ -267,8 +268,9 @@ export const useStudentsStore = create<StudentsStore>()(
           const response = await apiService.get('/students/search/', {
             params: { q: query },
           });
+          const data: any = response;
           set({
-            students: response.results,
+            students: data.results,
             loading: { ...get().loading, isLoading: false },
           });
         } catch (error: any) {
@@ -332,13 +334,14 @@ export const useAILessonsStore = create<AILessonsStore>()(
         set({ loading: { ...get().loading, isLoading: true, error: null } });
         try {
           const response = await apiService.get('/ai-teacher/lessons/', { params });
+          const data: any = response;
           set({
-            lessons: response.results,
+            lessons: data.results,
             pagination: {
               page: params.page || 1,
               pageSize: params.page_size || 10,
-              total: response.count,
-              totalPages: Math.ceil(response.count / (params.page_size || 10)),
+              total: data.count,
+              totalPages: Math.ceil(data.count / (params.page_size || 10)),
             },
             loading: { ...get().loading, isLoading: false },
           });

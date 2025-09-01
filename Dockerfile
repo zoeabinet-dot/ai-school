@@ -21,17 +21,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libgif-dev \
     libwebp-dev \
-    libopenexr-dev \
     libtiff-dev \
-    libavcodec-dev \
-    libavformat-dev \
-    libswscale-dev \
-    libv4l-dev \
-    libxvidcore-dev \
-    libx264-dev \
-    libgtk-3-dev \
-    libatlas-base-dev \
-    gfortran \
     wget \
     curl \
     git \
@@ -41,7 +31,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY requirements.txt requirements-prod.txt ./
+# Ensure pip, setuptools and wheel are up-to-date so pkg_resources is available during builds
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Install full requirements for development image; production stage will use requirements-prod.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Development environment
@@ -70,13 +64,13 @@ EXPOSE 8000
 # Development command
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
+
 # Stage 3: Production environment
 FROM base as production
 
-# Install production dependencies
-RUN pip install --no-cache-dir \
-    gunicorn \
-    whitenoise
+# Copy production requirements and install minimal production deps (faster builds)
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy source code
 COPY . .

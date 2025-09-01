@@ -76,3 +76,19 @@ INFO 2025-08-30 02:07:50,685 autoreload 25837 139956022092032 Watching for file 
 WARNING 2025-08-30 02:07:57,234 log 25837 139951259829952 Not Found: /api/students/
 WARNING 2025-08-30 02:08:00,469 log 25837 139951259829952 Not Found: /students/
 WARNING 2025-08-30 02:08:05,689 log 25837 139951259829952 Unauthorized: /api/v1/students/
+WARNING 2025-08-31 23:02:04,128 views 16039 133325371074368 optional dependency `openai` not available
+WARNING 2025-08-31 23:02:04,128 views 16039 133325371074368 optional dependency `whisper` not available
+WARNING 2025-08-31 23:02:04,128 views 16039 133325371074368 optional dependency `gtts` not available
+WARNING 2025-08-31 23:03:01,978 views 16540 128377467934528 optional dependency `openai` not available
+WARNING 2025-08-31 23:03:01,978 views 16540 128377467934528 optional dependency `whisper` not available
+WARNING 2025-08-31 23:03:01,978 views 16540 128377467934528 optional dependency `gtts` not available
+WARNING 2025-09-01 00:00:12,102 views 44770 140241370285888 optional dependency `openai` not available
+WARNING 2025-09-01 00:00:12,103 views 44770 140241370285888 optional dependency `whisper` not available
+WARNING 2025-09-01 00:00:12,103 views 44770 140241370285888 optional dependency `gtts` not available
+WARNING 2025-09-01 00:03:50,240 views 46357 126465075746624 optional dependency `openai` not available
+WARNING 2025-09-01 00:03:50,240 views 46357 126465075746624 optional dependency `whisper` not available
+WARNING 2025-09-01 00:03:50,240 views 46357 126465075746624 optional dependency `gtts` not available
+INFO 2025-09-01 01:36:28,010 autoreload 7 139226920315776 Watching for file changes with StatReloader
+WARNING 2025-09-01 01:36:28,613 views 7 139226920315776 optional dependency `openai` not available
+WARNING 2025-09-01 01:36:28,613 views 7 139226920315776 optional dependency `whisper` not available
+WARNING 2025-09-01 01:36:28,613 views 7 139226920315776 optional dependency `gtts` not available

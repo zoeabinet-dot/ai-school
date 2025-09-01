@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import jwtDecode from 'jwt-decode';
 import { toast } from 'react-hot-toast';
 
 // Types
@@ -161,7 +161,7 @@ class ApiService {
   }
 
   // Generic request methods
-  async get<T>(url: string, config?: AxiosRequestConfig, useCache = true): Promise<T> {
+  async get<T = any>(url: string, config?: AxiosRequestConfig, useCache = true): Promise<T> {
     const cacheKey = this.getCacheKey(url, config?.params);
     
     if (useCache) {
@@ -183,7 +183,7 @@ class ApiService {
     }
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response: AxiosResponse<T> = await this.api.post(url, data, config);
       return response.data;
@@ -193,7 +193,7 @@ class ApiService {
     }
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response: AxiosResponse<T> = await this.api.put(url, data, config);
       return response.data;
@@ -203,7 +203,7 @@ class ApiService {
     }
   }
 
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response: AxiosResponse<T> = await this.api.patch(url, data, config);
       return response.data;
@@ -213,7 +213,7 @@ class ApiService {
     }
   }
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response: AxiosResponse<T> = await this.api.delete(url, config);
       return response.data;
@@ -224,7 +224,7 @@ class ApiService {
   }
 
   // File upload with progress
-  async uploadFile<T>(
+  async uploadFile<T = any>(
     url: string,
     file: File,
     onProgress?: (progress: number) => void

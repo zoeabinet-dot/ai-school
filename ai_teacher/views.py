@@ -11,9 +11,26 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 import uuid
-import openai
-import whisper
-import gtts
+import logging
+
+# Optional AI/ML service imports: guard against missing heavyweight packages during startup
+try:
+    import openai
+except Exception:  # pragma: no cover - optional dependency
+    openai = None
+    logging.getLogger(__name__).warning('optional dependency `openai` not available')
+
+try:
+    import whisper
+except Exception:  # pragma: no cover - optional dependency
+    whisper = None
+    logging.getLogger(__name__).warning('optional dependency `whisper` not available')
+
+try:
+    import gtts
+except Exception:  # pragma: no cover - optional dependency
+    gtts = None
+    logging.getLogger(__name__).warning('optional dependency `gtts` not available')
 import os
 import tempfile
 from datetime import datetime, timedelta

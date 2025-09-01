@@ -103,6 +103,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 ### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
+
+# Optional: if you need AI/ML features (OpenAI, Whisper, TensorFlow, PyTorch, etc.)
+pip install -r requirements-ml.txt
 ```
 
 ### 4. Configure Environment Variables
@@ -149,6 +152,17 @@ python manage.py runserver
 ```
 
 The application will be available at `http://localhost:8000`
+
+### Frontend (optional - build for production)
+The React frontend lives in the `frontend/` folder. To build a production bundle:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Serve the resulting `build/` directory with your preferred static hosting (Nginx, S3, Vercel, etc.) or configure Nginx to serve it and proxy API calls to Django.
 
 ## 🔧 Configuration
 
@@ -320,6 +334,15 @@ docker build -t ai-school-management .
 # Run with Docker Compose
 docker-compose up -d
 ```
+
+### Deployment checklist (quick)
+
+- Copy `.env.example` to `.env` and fill in real secrets (IMPORTANT: set a strong SECRET_KEY with >=50 chars).
+- Ensure `DATABASE_URL` points to a production Postgres instance.
+- Set `DEBUG=False` and configure `ALLOWED_HOSTS` and `SECURE_SSL_REDIRECT=True` in production.
+- Run `python manage.py migrate` and `python manage.py collectstatic --noinput` during deployment.
+- Use the provided `Procfile` if deploying to platforms like Heroku.
+
 
 ## 🔒 Security Considerations
 
